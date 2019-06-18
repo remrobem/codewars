@@ -54,42 +54,38 @@
 //  */
 const justify = function (str, len) {
     // validation
-    if (!str) { return [] };
+    // if (!str) { return '' };    // validate str exists
 
-    // initialize
-    let lineList = [];
-    let newLine = '';
-    let wordList = str.split(' ');
-    for (let i = 0; i < wordList.length; i++) {
+    let words = str.split(' ');     // get str into a word array
 
-        if (newLine.length + wordList[i].length > len) {  // max line length reached w/o word split
-            newLine = formatLine(newLine, len);           // add spaces and /n  
-            lineList.push(newLine);
-            newLine = wordList[i] + ' ';                  // start next new line
+    let lines = words.reduce(function (linesAccum, word) {                    // build array of formatted lines
+        if (linesAccum[linesAccum.length - 1].length + word.length > len) {   // max line length reached w/o word split
+            newLine = formatLine(linesAccum[linesAccum.length - 1], len);     // add spaces and /n to "full" line
+            linesAccum[linesAccum.length - 1] = newLine;                      // update last entry in accumulator
+            newLine = word + ' ';                                             // initialize the next entry in accumulator array
+            linesAccum.push(newLine);                                         // add new entry in accumulator array
         } else {
-            newLine += wordList[i] + ' ';                 // build up output line
+            linesAccum[linesAccum.length - 1] += word + ' ';                  // update last entry in accumulator
         };
-    };
 
-    lineList.push(newLine.trim());
+        return linesAccum;
+    }, [''])
 
-    return lineList.join('')
+    return lines.join('');
 
     function formatLine(line, len) {
         line = line.trim();
-        const space = ' ';
-        let addSpaceCount = len - line.length;                          // number spaces that need to be added
-        let gaps = line.match(/[ ]/g);                                  // array of exisiting spaces between words
-        gaps = gaps ? gaps : []
-        let defaultGap = Math.floor(addSpaceCount / gaps.length) + 1;   // number of spaces needed between every word
-        let extraSpacesToAdd = (addSpaceCount % gaps.length);           // number of spaces to spread from left to right
+        let addSpaceCount = len - line.length;                                  // how many spaces to add      
+        let exisitingSpaceCount = line.match(/[ ]/g).length;                    // how many exiting spaces in the line
+        let defaultSpacesToAdd = Math.floor(addSpaceCount / exisitingSpaceCount) + 1;   // number of spaces needed between every word
+        let extraSpacesToAdd = (addSpaceCount % exisitingSpaceCount);           // number of additional spaces to spread from left to right
         line = line
             .split('')          // array of characters in word
             .map(char => {      // add additional spaces
                 if (char == ' ') {
-                    numberOfSpaces = extraSpacesToAdd > 0 ? defaultGap + 1 : defaultGap;
-                    extraSpacesToAdd -= 1;
-                    return space.repeat(numberOfSpaces);      // add number of spaces needed
+                    numberOfSpaces = extraSpacesToAdd > 0 ? defaultSpacesToAdd + 1 : defaultSpacesToAdd;    // add extra space if needed
+                    extraSpacesToAdd -= 1;                                                  // decrement extra spaces to add 
+                    return ' '.repeat(numberOfSpaces);                                      // add number of spaces needed to existing space
                 } else {
                     return char;
                 }
@@ -103,4 +99,4 @@ let test = 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vestibulum 
 let test1 = '123456789012345678901234567890123';
 let test2 = ''
 // test1 = 'a';
-console.log(justify(test, 30))
+console.log(justify(test1, 30))
