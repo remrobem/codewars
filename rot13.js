@@ -24,4 +24,8 @@ function rot13(str) {
 
 console.log(rot13("Va gur ryringbef, gur rkgebireg ybbxf ng gur BGURE thl'f fubrf"))
 
-module.exports = rot13;
+ exports let a = 'aaa';
+ let b = 'bbb';
+
+// export default rot13;
+module.exports = rot13
