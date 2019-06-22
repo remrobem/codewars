@@ -8,7 +8,7 @@
             "type": "node",
             "request": "launch",
             "name": "Launch Program",
-            "program": "${workspaceFolder}/textAlignJustify.js"
+            "program": "${workspaceFolder}/double-cola.js"
         }
     ]
 }
