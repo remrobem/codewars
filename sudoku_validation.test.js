@@ -47,6 +47,11 @@ test('invalid one value 2', () => {
     expect(new Sudoku([ [ 2 ] ]).isValid()).toBe(false);
 });
 
+test('invalid small squares', () => {
+    expect(badSudoku6.isValid()).toBe(false);
+});
+
+
 const goodSudoku1 = new Sudoku([
     [1, 2, 3],
     [2, 3, 1],
@@ -110,6 +115,16 @@ const badSudoku5 = new Sudoku([
     [2, 'a', 1],
     [3, 1, 2],
 ]);
+const badSudoku6 = new Sudoku(
+[ [ 1, 2, 3, 4, 5, 6, 7, 8, 9 ],
+  [ 2, 3, 1, 5, 6, 4, 8, 9, 7 ],
+  [ 3, 1, 2, 6, 4, 5, 9, 7, 8 ],
+  [ 4, 5, 6, 7, 8, 9, 1, 2, 3 ],
+  [ 5, 6, 4, 8, 9, 7, 2, 3, 1 ],
+  [ 6, 4, 5, 9, 7, 8, 3, 1, 2 ],
+  [ 7, 8, 9, 1, 2, 3, 4, 5, 6 ],
+  [ 8, 9, 7, 2, 3, 1, 5, 6, 4 ],
+  [ 9, 7, 8, 3, 1, 2, 6, 4, 5 ] ]);
 
 const goodSudoku3 = new Sudoku( [
     [ 17,

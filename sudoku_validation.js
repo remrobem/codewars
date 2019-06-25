@@ -74,7 +74,44 @@ var Sudoku = function (data) {
                 console.log('Soduku solution is not correct')
                 return false;
             };
+            // the kata instructions are not clear on what a small square is, so just hard coding this for a 9x9 only
+            if (data[0].length == 9) {
+                let smallSquare = [];
+                // let columns = 0;
+                // let rows = 0
+                // for (let i = rows; i < data.length; i++) {
+                //     let rowCounter = 0;
+                let rowCounter = 0, columnCounter = 0, gridColumnCounter = 0; gridRowCounter = 0;
+                while (rowCounter < data.length) {
 
+                    while (columnCounter < data.length) {
+                        
+                        gridRowCounter = 0;
+
+                        while (gridRowCounter < 3) {
+
+                            gridColumnCounter = 0;
+
+                            while (gridColumnCounter < 3) {
+                                smallSquare.push(data[rowCounter, columnCounter]);
+                                gridColumnCounter++;
+                                columnCounter++;
+                            }
+
+                            gridRowCounter++;
+                        }
+                        
+                        console.log(smallSquare);
+                        if (!areRowsValid(smallSquare) || !areRowsValid(transposeData(smallSquare))) {
+                            console.log('Soduku solution is not correct')
+                            return false;
+                        };
+                        smallSquare = [];
+                    }
+                    rowCounter += 3;
+                    columnCounter = 0;
+                }
+            };
             return true;
         }
     };
