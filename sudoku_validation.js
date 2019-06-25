@@ -24,48 +24,36 @@
 // Note: the matrix may include non-integer elements.
 
 var Sudoku = function (data) {
-    //   Private methods
-    // ------------------------
-
-    function isValidInteger() {
-
-        // create string of all the data values
-        let dataString = data.join('').replace(/,/g, '');
-
-        // must have some values in the data and all be numeric
-        if (dataString == (null || undefined || '') || isNaN(dataString)) { return false };
-
-        // return true if validation checks pass
-        return true;
-
-    }
 
     function areRowsValid(rows) {
 
-        for (let i = 0; i < rows.length; i++) {
-            // all rows must be same length
-            if (rows[0].length != rows[i].length) { return false };
-            let rowValues = [];
-            // filter the row returning only invalid values
-            let rowValidation = rows[i].filter((value) => {
-                // value not in allowed range
-                if (value < 1 || value > rows[i].length) {
-                    return true
-                }
-                // value already used in row
-                if (rowValues.indexOf(value) >= 0) {
-                    return true
-                }
-                rowValues.push(value);
-            });
+        return rows.reduce((isValid, row) => {
+            // only perform checks if an error not found already
+            if (isValid) {
 
-            if (rowValidation.length) {
-                return false
-            };
-        };
+                // all rows must be same length
+                if (row.length != rows[0].length) { isValid = false; return isValid };
 
-        // return true if validation checks pass
-        return true;
+                let rowValues = [];
+                // filter values in the row returning only invalid values
+                let rowValidation = row.filter((value) => {
+                    // value not in allowed range and is an integer
+                    if (!Number.isInteger(value) || (value < 1 || value > row.length)) {
+                        return true
+                    }
+                    // value already used in row
+                    if (rowValues.indexOf(value) >= 0) {
+                        return true
+                    }
+                    rowValues.push(value);
+                });
+
+                // error found if any values from row were kept(failed validation)
+                return rowValidation.length ? false : true;
+                // return true;
+                // };
+            }
+        }, true)
     };
 
     function transposeData(array) {
@@ -82,10 +70,6 @@ var Sudoku = function (data) {
                 console.log('No data provided');
                 return false;
             };
-            if (!isValidInteger()) {
-                console.log('Invalid value found')
-                return false;
-            };
             if (!areRowsValid(data) || !areRowsValid(transposeData(data))) {
                 console.log('Soduku solution is not correct')
                 return false;
@@ -98,19 +82,19 @@ var Sudoku = function (data) {
 
 module.exports = Sudoku;
 
-// const goodSudoku1 = new Sudoku([
-//     [7, 8, 4, 1, 5, 9, 3, 2, 6],
-//     [5, 3, 9, 6, 7, 2, 8, 4, 1],
-//     [6, 1, 2, 4, 3, 8, 7, 5, 9],
+const goodSudoku1 = new Sudoku([
+    [7, 8, 4, 1, 5, 9, 3, 2, 6],
+    [5, 3, 9, 6, 7, 2, 8, 4, 1],
+    [6, 1, 2, 4, 3, 8, 7, 5, 9],
 
-//     [9, 2, 8, 7, 1, 5, 4, 6, 3],
-//     [3, 5, 7, 8, 4, 6, 1, 9, 2],
-//     [4, 6, 1, 9, 2, 3, 5, 8, 7],
+    [9, 2, 8, 7, 1, 5, 4, 6, 3],
+    [3, 5, 7, 8, 4, 6, 1, 9, 2],
+    [4, 6, 1, 9, 2, 3, 5, 8, 7],
 
-//     [8, 7, 6, 3, 9, 4, 2, 1, 5],
-//     [2, 4, 3, 5, 6, 1, 9, 7, 8],
-//     [1, 9, 5, 2, 8, 7, 6, 3, 4]
-// ]);
+    [8, 7, 6, 3, 9, 4, 2, 1, 5],
+    [2, 4, 3, 5, 6, 1, 9, 7, 8],
+    [1, 9, 5, 2, 8, 7, 6, 3, 4]
+]);
 
 // const goodSudoku2 = new Sudoku([
 //     [1, 2, 3],
@@ -121,7 +105,7 @@ module.exports = Sudoku;
 const badSudoku2 = new Sudoku([
     [2]
 ]);
-console.log(badSudoku2.isValid());
+console.log(goodSudoku1.isValid());
 // console.log(goodSudoku2.isValid());
 
 
