@@ -32,36 +32,38 @@ var Sudoku = function (data) {
             if (isValid) {
 
                 // all rows must be same length
-                if (row.length != rows[0].length) { return false }
+                if (row.length != rows[0].length) {
+                    console.log('Row lengths are not equal');
+                    return false
+                }
 
-                // validate data in row
-                return isRowValid(row);
+                // row values must be unique
+                uniqueRowValues = [...new Set(row)];
+                if (row.length != uniqueRowValues.length) {
+                    console.log(`Values are not unique for a row or column: ${row}`);
+                    return false
+                };
+
+                // row values must be integer and in range of 1 to row length
+                let rowValidation = row.filter((value) => {
+                    if (!Number.isInteger(value) || (value < 1 || value > row.length)) {
+                        console.log(`${value} is not an allowed value`)
+                        return true
+                    }
+                    return false;
+                });
+
+                // error found if any values from row were kept(failed validation)
+                return rowValidation.length ? false : true;
             }
+            return isValid;
         }, true)
     };
 
     function transposeData(array) {
-        return array.reduce((r, a) => a.map((v, i) => [...(r[i] || []), v]), []);
+        return array.reduce((newRow, row) => row.map((value, index) => [...(newRow[index] || []), value]), []);
     }
 
-    function isRowValid(row) {
-
-        // row values must be unique
-        uniqueRowValues = [...new Set(row)];
-        if (row.length != uniqueRowValues.length) { return false }
-
-        // row values must be integer and in range of 1 to row length
-        let rowValidation = row.filter((value) => {
-            // value not in allowed range and is an integer
-            if (!Number.isInteger(value) || (value < 1 || value > row.length)) {
-                return true
-            }
-            return false;
-        });
-
-        // error found if any values from row were kept(failed validation)
-        return rowValidation.length ? false : true;
-    }
     function isSmallSquareValid() {
         // only do this if the data contains small squares of equal size (data length of 2, 9, 16, 25,....)
         let count = Math.sqrt(data.length);
@@ -75,21 +77,15 @@ var Sudoku = function (data) {
                 // loop to go down the rows for each set of columns
                 while (row < data.length) {
                     // build small square 2D array
-                    smallSquareArrays = [];
                     for (let i = 0; i < count; i++) {
-                        smallSquareArrays.push(data[row + i].slice(column, column + count))
+                        smallSquareString = (i == 0) ? data[row + i].slice(column, column + count).toString() : smallSquareString + ',' + data[row + i].slice(column, column + count).toString();
                     }
-                    // flatten the smallSquares array to get all the values in one array
-                    smallSquareValues = [];
-                    for (var i = 0; i < smallSquareArrays.length; i++) {
-                        for (var j = 0; j < smallSquareArrays[i].length; j++) {
-                            smallSquareValues.push(smallSquareArrays[i][j]);
-                        }
-                    }
-                    // get unique values from the smallSquares array
-                    uniqueValues = [...new Set(smallSquareValues)];
+                    smallSquareValues = smallSquareString.split(',');
                     // the number of unique values should match the number of values in smallSquare
-                    if (uniqueValues.length != smallSquareValues.length) { return false }
+                    if ([...new Set(smallSquareValues)].length != smallSquareString.split(',').length) {
+                        console.log('At least one of the small squares is not valid')
+                        return false
+                    };
                     // initialize to process the next sets of rows
                     row += count;
                 }
@@ -113,12 +109,9 @@ var Sudoku = function (data) {
                 return false;
             };
             // must be valid sudoku
-            if (!areRowsValid(data) || !areRowsValid(transposeData(data))) {
-                console.log('Soduku solution is not correct')
-                return false;
-            };
+            if (!areRowsValid(data) || !areRowsValid(transposeData(data))) { return false; };
             // each small square (the data dimensions are an even square, 4, 9, 16, 25,.....) must contain each number once
-            if (!isSmallSquareValid()) { return false }
+            if (!isSmallSquareValid()) { return false; }
 
             return true;
 
