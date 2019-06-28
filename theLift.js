@@ -139,53 +139,61 @@ var theLift = function (queues, capacity) {
   // Your code here!
   if (!queues || !capacity) { return 'error' };
 
-  let stops = [];
+  let stopsUp = [];
+  let stopsDown = [];
 
-  let stopsUp = [...Array(queues.length)].map(x => Array(0));
-  let stopsDown = [...Array(queues.length)].map(x => Array(0));
-  // console.log(stopsDown);
-  // console.log(stopsUp);
-  // console.log(queues);
-
-  let lift = [...queues];
-
-  queues.forEach((floor, index) => {
-    floor.forEach((toFloor) => {
-      if (toFloor > index) {
-        count = toFloor - index;
-        stopsUp[index].push(count);
-      } else {
-        count = index - toFloor;
-        stopsDown[index].push(count);
-      };
-    });
-  });
-  // console.log(stopsUp);
-  // console.log(stopsDown);
+  // let stopsUp = [...Array(queues.length)].map(x => Array(0));
+  // let stopsDown = [...Array(queues.length)].map(x => Array(0));
+  let queue = JSON.parse(JSON.stringify(queues));
   let riderCount = 0;
 
+  let buildStops = function (queue, capacity) {
+    queue.forEach((riders, queueIndex) => {
+      riders.forEach((toFloor, toFloorIndex) => {
 
-  queues.forEach((riders, ridersIndex) => {
-    riders.forEach( (toFloor, toFloorIndex) => {
-      if (toFloor > ridersIndex && riderCount <= capacity) {
-        riderCount += 1;
-        stops.push(toFloor);
-        stops.sort();
-      }
-    })
-  
+        // stops.forEach((floor) => {
+        //   if (toFloor == queueIndex) {
+        //     riderCount -= 1;
+        //     // stops = stops.slice(toFloorIndex)
+        //   }
+        // })
 
-   
+        if (toFloor > queueIndex && riderCount <= capacity) {
+          // riderCount += 1;
+          if (stopsUp.indexOf(queueIndex) < 0) {
+            stopsUp.push(queueIndex);
+            stopsUp.push(toFloor);
+          } else {
+            stopsUp.push(toFloor);
+          }
+          stopsUp.sort();
+          queue[queueIndex].splice(toFloorIndex, 1)
+        } else {
+          if (toFloor < queueIndex && riderCount <= capacity) {
+            // riderCount += 1;
+            if (stopsDown.indexOf(queueIndex) < 0) {
+              stopsDown.push(queueIndex);
+              stopsDown.push(toFloor);
+            } else {
+              stopsDown.push(toFloor);
+            }
+            stopsDown.sort();
+            queue[queueIndex].splice(toFloorIndex, 1)
+          } else {
+            queue[queueIndex].splice(toFloorIndex, 1)
+          }
 
+        }
+      });
 
+    });
+    return [...stopsUp, ...stopsDown.reverse()];
+  };
 
-  });
+  return buildStops(queue, capacity);
 
-
-  return stops;
 };
-
 
 module.exports = theLift;
 
-console.log(theLift([[], [0], [5, 5], [], [], []], 5));
+console.log(theLift([[], [0], [5], [4], [2], []], 5));
