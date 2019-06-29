@@ -137,63 +137,175 @@
 
 var theLift = function (queues, capacity) {
   // Your code here!
-  if (!queues || !capacity) { return 'error' };
 
+  // let trips = queues.map((queue, index) => {
+  //   let { upGetOn, upGetOff } = queue.map((floor) => {
+  //     let upGetOn = 1;
+  //     let upGetOff = 2;
+  //     return  { upGetOn, upGetOff }
+  //   });
+
+  //   return {
+  //     floor: index,
+  //     upGetOn: upGetOn,
+  //     upGetOff: upGetOff,
+  //     downGetOn: 0,
+  //     downGetOff: 0,
+  //   }
+  // });
+  let trips = [];
+  let stops = [];
   let stopsUp = [];
   let stopsDown = [];
-
-  // let stopsUp = [...Array(queues.length)].map(x => Array(0));
-  // let stopsDown = [...Array(queues.length)].map(x => Array(0));
-  let queue = JSON.parse(JSON.stringify(queues));
   let riderCount = 0;
 
-  let buildStops = function (queue, capacity) {
-    queue.forEach((riders, queueIndex) => {
-      riders.forEach((toFloor, toFloorIndex) => {
+  buildTrips(queues);
+  buildStops(trips);
 
-        // stops.forEach((floor) => {
-        //   if (toFloor == queueIndex) {
-        //     riderCount -= 1;
-        //     // stops = stops.slice(toFloorIndex)
-        //   }
-        // })
+  console.log(trips);
+  console.log(stops);
 
-        if (toFloor > queueIndex && riderCount <= capacity) {
-          // riderCount += 1;
-          if (stopsUp.indexOf(queueIndex) < 0) {
-            stopsUp.push(queueIndex);
-            stopsUp.push(toFloor);
-          } else {
-            stopsUp.push(toFloor);
-          }
-          stopsUp.sort();
-          queue[queueIndex].splice(toFloorIndex, 1)
-        } else {
-          if (toFloor < queueIndex && riderCount <= capacity) {
-            // riderCount += 1;
-            if (stopsDown.indexOf(queueIndex) < 0) {
-              stopsDown.push(queueIndex);
-              stopsDown.push(toFloor);
-            } else {
-              stopsDown.push(toFloor);
-            }
-            stopsDown.sort();
-            queue[queueIndex].splice(toFloorIndex, 1)
-          } else {
-            queue[queueIndex].splice(toFloorIndex, 1)
-          }
-
-        }
-      });
-
-    });
-    return [...stopsUp, ...stopsDown.reverse()];
+  function buildTrips(queues) {
+    return queues.map((queue, floor) => {
+      return queue.map((toFloor) => {
+        let direction = floor < toFloor ? '+' : '-';
+        trips.push({ fromFloor: floor, toFloor, direction });
+      })
+    })
   };
 
-  return buildStops(queue, capacity);
+
+  function buildStops(trips) {
+    stops.push(0);
+    tripsLeft = getTripsLeft(trips);
+    while (tripsLeft.length) {
+      stopsUp = [];
+      liftUp(trips);
+      stopsUp.sort();
+      stopsUp = [...new Set(stopsUp)];
+
+      trips.reverse();
+
+      stopsDown = [];
+      liftDown(trips);
+      stopsDown.sort(function (a, b) {
+        b - a;
+      });
+
+      stops = [...stops, ...stopsUp, ...stopsDown];
+
+      trips.reverse();
+      tripsLeft = getTripsLeft(trips);
+    }
+  };
+
+function getTripsLeft(trips) {
+  return trips.filter((trip) => {
+    return trip.fromFloor == null ? false : true;
+  });
+}
+
+  function liftUp(trips) {
+    return trips.map((trip) => {
+      if (trip.direction === '+') {
+        riderCount = riderGetOff(riderCount, trip);
+        if (riderCount < capacity) {
+          riderCount += 1;
+          stopsUp.push(trip.fromFloor);
+          stopsUp.push(trip.toFloor);
+          riderCount = riderGetOff(riderCount, trip);
+          trip.fromFloor = null;
+        }
+      }
+    })
+  };
+
+  function liftDown(trips) {
+    return trips.map((trip) => {
+      if (trip.direction === '-') {
+        riderCount = riderGetOff(riderCount, trip);
+        if (riderCount < capacity) {
+          riderCount += 1;
+          stopsDown.push(trip.fromFloor);
+          stopsDown.push(trip.toFloor);
+          riderCount = riderGetOff(riderCount, trip);
+          trip.fromFloor = null;
+        }
+      }
+    })
+  }
+
+
+  function riderGetOff(riderCount, trip) {
+    let getOff = trips.filter((floor) => {
+      return floor == trip.toFloor ? true : false;
+    });
+    if (getOff) {
+      riderCount -= getOff.length;
+    }
+    return riderCount;
+  }
+
+
+
+
+  // if (!queues || !capacity) { return 'error' };
+
+  // let stopsUp = [];
+  // let stopsDown = [];
+
+  // // let stopsUp = [...Array(queues.length)].map(x => Array(0));
+  // // let stopsDown = [...Array(queues.length)].map(x => Array(0));
+  // let queue = JSON.parse(JSON.stringify(queues));
+  // let riderCount = 0;
+
+  // let buildStops = function (queue, capacity) {
+  //   queue.forEach((riders, queueIndex) => {
+  //     riders.forEach((toFloor, toFloorIndex) => {
+
+  //       // stops.forEach((floor) => {
+  //       //   if (toFloor == queueIndex) {
+  //       //     riderCount -= 1;
+  //       //     // stops = stops.slice(toFloorIndex)
+  //       //   }
+  //       // })
+
+  //       if (toFloor > queueIndex && riderCount <= capacity) {
+  //         // riderCount += 1;
+  //         if (stopsUp.indexOf(queueIndex) < 0) {
+  //           stopsUp.push(queueIndex);
+  //           stopsUp.push(toFloor);
+  //         } else {
+  //           stopsUp.push(toFloor);
+  //         }
+  //         stopsUp.sort();
+  //         queue[queueIndex].splice(toFloorIndex, 1)
+  //       } else {
+  //         if (toFloor < queueIndex && riderCount <= capacity) {
+  //           // riderCount += 1;
+  //           if (stopsDown.indexOf(queueIndex) < 0) {
+  //             stopsDown.push(queueIndex);
+  //             stopsDown.push(toFloor);
+  //           } else {
+  //             stopsDown.push(toFloor);
+  //           }
+  //           stopsDown.sort();
+  //           queue[queueIndex].splice(toFloorIndex, 1)
+  //         } else {
+  //           queue[queueIndex].splice(toFloorIndex, 1)
+  //         }
+
+  //       }
+  //     });
+
+  //   });
+  //   return [...stopsUp, ...stopsDown.reverse()];
+  // };
+
+  // return buildStops(queue, capacity);
 
 };
 
 module.exports = theLift;
 
-console.log(theLift([[], [0], [5], [4], [2], []], 5));
+console.log(theLift([[], [3, 4], [4,5,4,5,4,5], [], [2], []], 5));
