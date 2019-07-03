@@ -136,37 +136,26 @@
 
 
 var theLift = function (queues, capacity) {
-  // Your code here!
 
-  // let trips = queues.map((queue, index) => {
-  //   let { upGetOn, upGetOff } = queue.map((floor) => {
-  //     let upGetOn = 1;
-  //     let upGetOff = 2;
-  //     return  { upGetOn, upGetOff }
-  //   });
-
-  //   return {
-  //     floor: index,
-  //     upGetOn: upGetOn,
-  //     upGetOff: upGetOff,
-  //     downGetOn: 0,
-  //     downGetOff: 0,
-  //   }
-  // });
+  console.log(queues, capacity);
   let trips = [];
-  let stops = [];
+  let riderCount = 0;
   let stopsUp = [];
   let stopsDown = [];
-  let riderCount = 0;
+  let stopsGetOff = [];
+  let lift = [];
 
   buildTrips(queues);
-  buildStops(trips);
+  return buildStops(trips);
 
-  console.log(trips);
-  console.log(stops);
+  // console.log(trips);
+  // console.log(stops);
 
   function buildTrips(queues) {
     return queues.map((queue, floor) => {
+      if (queue.length == 0) {
+        trips.push({ fromFloor: floor });
+      }
       return queue.map((toFloor) => {
         let direction = floor < toFloor ? '+' : '-';
         trips.push({ fromFloor: floor, toFloor, direction });
@@ -176,11 +165,16 @@ var theLift = function (queues, capacity) {
 
 
   function buildStops(trips) {
+    let stops = [];
+
+
     stops.push(0);
+    // -----------------------------------------------------
     tripsLeft = getTripsLeft(trips);
     while (tripsLeft.length) {
       stopsUp = [];
       liftUp(trips);
+      stopsUp = [...stopsUp, ...stopsGetOff]
       stopsUp.sort();
       stopsUp = [...new Set(stopsUp)];
 
@@ -188,124 +182,98 @@ var theLift = function (queues, capacity) {
 
       stopsDown = [];
       liftDown(trips);
+      stopsDown = [...stopsDown, ...stopsGetOff];
       stopsDown.sort(function (a, b) {
-        b - a;
+        return b - a;
       });
+      stopsDown = [...new Set(stopsDown)];
 
+      if (stops[stops.length - 1] == stopsUp[0]) {
+        stops.splice(stops.length - 1);
+      }
+      if (stopsUp[stopsUp.length - 1] == stopsDown[0]) {
+        stopsUp.splice(stopsUp.length - 1);
+      }
       stops = [...stops, ...stopsUp, ...stopsDown];
 
       trips.reverse();
       tripsLeft = getTripsLeft(trips);
+    };
+    if (stops[stops.length - 1] != 0) {
+      stops.push(0);
     }
+
+    return stops;
   };
 
-function getTripsLeft(trips) {
-  return trips.filter((trip) => {
-    return trip.fromFloor == null ? false : true;
-  });
-}
+  function getTripsLeft(trips) {
+    return trips.filter((trip) => {
+      return trip.toFloor == null ? false : true;
+    });
+  }
 
   function liftUp(trips) {
-    return trips.map((trip) => {
-      if (trip.direction === '+') {
-        riderCount = riderGetOff(riderCount, trip);
-        if (riderCount < capacity) {
-          riderCount += 1;
-          stopsUp.push(trip.fromFloor);
-          stopsUp.push(trip.toFloor);
-          riderCount = riderGetOff(riderCount, trip);
-          trip.fromFloor = null;
-        }
-      }
-    })
+
+    for (let i = 0; i < queues.length; i++) {
+      riderGetOff(i);
+      if (trips[i].toFloor && trips[i].direction === '+') {
+        lift.push({ toFloor: trips[i].toFloor })
+        stopsUp.push(trips[i].fromFloor);
+        trips[i].toFloor = null;
+      };
+    };
   };
+  //   return trips.map((trip) => {
+  //     riderGetOff(trip.fromFloor);
+  //     if (trip.fromFloor != null && trip.direction === '+') {
 
-  function liftDown(trips) {
-    return trips.map((trip) => {
-      if (trip.direction === '-') {
-        riderCount = riderGetOff(riderCount, trip);
-        if (riderCount < capacity) {
-          riderCount += 1;
-          stopsDown.push(trip.fromFloor);
-          stopsDown.push(trip.toFloor);
-          riderCount = riderGetOff(riderCount, trip);
-          trip.fromFloor = null;
-        }
-      }
-    })
-  }
-
-
-  function riderGetOff(riderCount, trip) {
-    let getOff = trips.filter((floor) => {
-      return floor == trip.toFloor ? true : false;
-    });
-    if (getOff) {
-      riderCount -= getOff.length;
-    }
-    return riderCount;
-  }
-
-
-
-
-  // if (!queues || !capacity) { return 'error' };
-
-  // let stopsUp = [];
-  // let stopsDown = [];
-
-  // // let stopsUp = [...Array(queues.length)].map(x => Array(0));
-  // // let stopsDown = [...Array(queues.length)].map(x => Array(0));
-  // let queue = JSON.parse(JSON.stringify(queues));
-  // let riderCount = 0;
-
-  // let buildStops = function (queue, capacity) {
-  //   queue.forEach((riders, queueIndex) => {
-  //     riders.forEach((toFloor, toFloorIndex) => {
-
-  //       // stops.forEach((floor) => {
-  //       //   if (toFloor == queueIndex) {
-  //       //     riderCount -= 1;
-  //       //     // stops = stops.slice(toFloorIndex)
-  //       //   }
-  //       // })
-
-  //       if (toFloor > queueIndex && riderCount <= capacity) {
-  //         // riderCount += 1;
-  //         if (stopsUp.indexOf(queueIndex) < 0) {
-  //           stopsUp.push(queueIndex);
-  //           stopsUp.push(toFloor);
-  //         } else {
-  //           stopsUp.push(toFloor);
-  //         }
-  //         stopsUp.sort();
-  //         queue[queueIndex].splice(toFloorIndex, 1)
-  //       } else {
-  //         if (toFloor < queueIndex && riderCount <= capacity) {
-  //           // riderCount += 1;
-  //           if (stopsDown.indexOf(queueIndex) < 0) {
-  //             stopsDown.push(queueIndex);
-  //             stopsDown.push(toFloor);
-  //           } else {
-  //             stopsDown.push(toFloor);
-  //           }
-  //           stopsDown.sort();
-  //           queue[queueIndex].splice(toFloorIndex, 1)
-  //         } else {
-  //           queue[queueIndex].splice(toFloorIndex, 1)
-  //         }
-
+  //       if (lift.length < capacity) {
+  //         lift.push({ toFloor: trip.toFloor })
+  //         stopsUp.push(trip.fromFloor);
+  //         stopsUp.push(trip.toFloor);
+  //         trip.fromFloor = null;
   //       }
-  //     });
-
-  //   });
-  //   return [...stopsUp, ...stopsDown.reverse()];
+  //     }
+  //   })
   // };
 
-  // return buildStops(queue, capacity);
+  function liftDown(trips) {
+
+    for (let i = 0; i < queues.length; i++) {
+      riderGetOff(i);
+      if (trips[i].toFloor && trips[i].direction === '-') {
+        lift.push({ toFloor: trips[i].toFloor })
+        stopsDown.push(trips[i].fromFloor);
+        trips[i].toFloor = null;
+      };
+    };
+  }
+  // return trips.map((trip) => {
+  //   riderGetOff(trip.fromFloor);
+  //   if (trip.fromFloor != null && trip.direction === '-') {
+
+  //     if (lift.length < capacity) {
+  //       lift.push({ toFloor: trip.toFloor })
+  //       stopsDown.push(trip.fromFloor);
+  //       stopsDown.push(trip.toFloor);
+  //       trip.fromFloor = null;
+  //     }
+  //   }
+  // })
+  // }
+
+  function riderGetOff(onFloor) {
+    lift = lift.filter((rider) => {
+      if (rider.toFloor == onFloor) {
+        stopsGetOff.push(onFloor);
+        return false
+      }
+      return true;
+    });
+  }
 
 };
 
 module.exports = theLift;
 
-console.log(theLift([[], [3, 4], [4,5,4,5,4,5], [], [2], []], 5));
+console.log(theLift([[3, 3,3,3,3,3], [], [], [], [], [], []], 5));
