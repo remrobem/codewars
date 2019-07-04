@@ -159,15 +159,12 @@ var theLift = function (queues, capacity) {
   function buildStops(trips) {
     let stops = [];
 
-
     stops.push(0);
-    // -----------------------------------------------------
-    // tripsLeft = getTripsLeft(trips);
-    // while (tripsLeft.length) {
+
     while (trips.length) {
       stopsUp = [];
       trips = moveLift(trips, '+');
-      // stopsUp = [...stopsUp, ...stopsGetOff]
+      
       stopsUp.sort();
       stopsUp = [...new Set(stopsUp)];
 
@@ -175,7 +172,6 @@ var theLift = function (queues, capacity) {
 
       stopsDown = [];
       trips = moveLift(trips, '-');
-      // stopsDown = [...stopsDown, ...stopsGetOff];
       stopsDown.sort(function (a, b) {
         return b - a;
       });
@@ -242,6 +238,7 @@ var theLift = function (queues, capacity) {
 
 module.exports = theLift;
 
-console.log(theLift([[3, 3, 3, 3, 3, 3, 3], [], [], [], [], [], []], 5));
-console.log(theLift([[1], [6], [], [5], [2], [], []], 5));
+// console.log(theLift([ [], [], [], [], [], [], [] ], 5));
+// console.log(theLift([[3, 3, 3, 3, 3, 3, 3], [], [], [], [], [], []], 5));
+// console.log(theLift([[1], [6], [], [5], [2], [], []], 5));
 
