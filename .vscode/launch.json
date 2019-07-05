@@ -9,7 +9,7 @@
             "type": "node",
             "request": "launch",
             "name": "Launch Program",
-            "program": "${workspaceFolder}/theLift.js"
+            "program": "${workspaceFolder}/theLift/theLift.js"
         }
     ]
 }

@@ -134,40 +134,80 @@
 //     }); 
 //   });
 
-
-var theLift = function (queues, capacity) {
+"use strict";
+let theLift = function (queues, capacity) {
 
   console.log(queues, capacity);
   let trips = [];
   let stopsUp = [];
   let stopsDown = [];
   let lift = [];
+  let upTrips = [];
+  let downTrips = [];
 
-  buildTrips(queues);
+
+  trips = buildTrips(queues);
   return buildStops(trips);
 
+  // create new array containing each rider elevator request
+  // the entries in this array indication if the destination is up or down
   function buildTrips(queues) {
-    return queues.map((queue, floor) => {
-      return queue.map((toFloor) => {
-        let direction = floor < toFloor ? '+' : '-';
-        trips.push({ fromFloor: floor, toFloor, direction });
-      })
-    })
+
+    getUpTrips(queues);
+
+    getDownTrips(queues);
+
+    return [...upTrips, ...downTrips];
+
   };
 
+  // get all the rider up requests
+  function getUpTrips(queues) {
+    return queues.map((queue, floor) => {
+      return queue.filter((toFloor) => {
+        let direction = floor < toFloor ? '+' : '-';
+        if (direction == '+') {
+          upTrips.push({ fromFloor: floor, toFloor, direction });
+        }
+      });
+    });
+  };
+
+  // get all the elevator doen requests.
+  // the queue for each floor needs to be reversed to support going thru the array
+  function getDownTrips(queues) {
+    return queues.map((queue, floor) => {
+      queue.reverse();
+      return queue.map((toFloor) => {
+        let direction = floor < toFloor ? '+' : '-';
+        if (direction == '-') {
+          downTrips.push({ fromFloor: floor, toFloor, direction });
+        }
+      });
+    });
+  }
 
   function buildStops(trips) {
     let stops = [];
 
+    // initialize the stops
     stops.push(0);
 
     while (trips.length) {
+
+      // get the stops for an up trip
+      // sort the results and get only unique values
       stopsUp = [];
       trips = moveLift(trips, '+');
-      
-      stopsUp.sort();
+
+      stopsUp.sort(function (a, b) {
+        return a - b;
+      });
       stopsUp = [...new Set(stopsUp)];
 
+
+      // get the stops for a down trip
+      // sort the results and get only unique values
       trips.reverse();
 
       stopsDown = [];
@@ -177,49 +217,76 @@ var theLift = function (queues, capacity) {
       });
       stopsDown = [...new Set(stopsDown)];
 
-      if (stops[stops.length - 1] == stopsUp[0]) {
-        stops.splice(stops.length - 1);
-      }
-      if (stopsUp[stopsUp.length - 1] == stopsDown[0]) {
-        stopsUp.splice(stopsUp.length - 1);
-      }
+
+      // // if the starting floor for the new up trip is same as the 
+      //       if (stops[stops.length - 1] == stopsUp[0]) {
+      //         stops.splice(stops.length - 1);
+      //       }
+      //       if (stopsUp[stopsUp.length - 1] == stopsDown[0]) {
+      //         stopsUp.splice(stopsUp.length - 1);
+      //       }
+
+      // concatenate prior trips with the current up and down trip
       stops = [...stops, ...stopsUp, ...stopsDown];
 
+      // remove any adjacent duplicates that may have copme from trip down starting on same floor as trip up ended
+      stops = removeAdjacentDuplicates(stops);
+
       trips.reverse();
-      tripsLeft = getTripsLeft(trips);
+
     };
+    // add a grounf floor stop at the end of the stops in case it does not already exist
     if (stops[stops.length - 1] != 0) {
       stops.push(0);
     }
-
     return stops;
   };
 
-  function getTripsLeft(trips) {
-    return trips.filter((trip) => {
-      return trip.toFloor == null ? false : true;
+  function removeAdjacentDuplicates(stops) {
+    return stops.filter((floor, i, floors) => {
+      return floor !== floors[i - 1];
     });
-  }
+  };
 
   function moveLift(trips, direction) {
 
-    for (let onFloor = 0; onFloor < queues.length; onFloor++) {
-      lift = riderGetOff(onFloor);
-      trips = trips.filter((trip) => {
-        if (lift.length < capacity && trip.fromFloor == onFloor && trip.direction == direction) {
-          lift.push({ toFloor: trip.toFloor });
-          if (direction == '+') {
+    if (direction == '+') {
+      for (let onFloor = 0; onFloor < queues.length; onFloor++) {
+        lift = riderGetOff(onFloor);
+        trips = trips.filter((trip) => {
+          if (trip.fromFloor == onFloor && trip.direction == direction) {
             stopsUp.push(onFloor);
-            stopsUp.push(trip.toFloor);
+            if (lift.length < capacity) {
+              lift.push({ toFloor: trip.toFloor });
+              stopsUp.push(trip.toFloor);
+              return false;
+            } else {
+              return true;
+            }
           } else {
-            stopsDown.push(onFloor);
-            stopsDown.push(trip.toFloor);
+            return true;
           };
-          return false;
-        } else {
-          return true
-        };
-      });
+        });
+      };
+    }
+    else {
+      for (let onFloor = queues.length - 1; onFloor >= 0; onFloor--) {
+        lift = riderGetOff(onFloor);
+        trips = trips.filter((trip) => {
+          if (trip.fromFloor == onFloor && trip.direction == direction) {
+            stopsDown.push(onFloor);
+            if (lift.length < capacity) {
+              lift.push({ toFloor: trip.toFloor });
+              stopsDown.push(trip.toFloor);
+              return false;
+            } else {
+              return true;
+            }
+          } else {
+            return true;
+          };
+        });
+      };
     };
 
     return trips;
@@ -238,7 +305,64 @@ var theLift = function (queues, capacity) {
 
 module.exports = theLift;
 
+
+// console.log(theLift([[],
+// [0, 0, 0, 0],
+// [0, 0, 0, 0],
+// [0, 0, 0, 0],
+// [0, 0, 0, 0],
+// [0, 0, 0, 0],
+// [0, 0, 0, 0]], 5));
+// '[0, 6, 5, 4, 3, 2, 1, 0, 5, 4, 3, 2, 1, 0, 4, 3, 2, 1, 0, 3, 2, 1, 0, 1, 0]',
 // console.log(theLift([ [], [], [], [], [], [], [] ], 5));
 // console.log(theLift([[3, 3, 3, 3, 3, 3, 3], [], [], [], [], [], []], 5));
 // console.log(theLift([[1], [6], [], [5], [2], [], []], 5));
 
+// console.log(theLift([[5],
+// [4, 8, 6, 9],
+// [3, 10, 1],
+// [7, 1, 2],
+// [8, 6, 9],
+// [6, 8, 7, 0],
+// [9, 0],
+// [],
+// [7],
+// [7],
+// [4]], 2));
+// [0, 1, 2, 3, 4, 5, 6, 8, 9, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0, 1, 2, 3, 4, 5, 6, 8, 7, 5, 3, 2, 1, 0, 1, 2, 3, 4, 5, 7, 9, 2, 4, 5, 6, 10, 4, 5, 8, 9, 5, 7, 0]
+
+
+// console.log(theLift([
+//   [4, 12, 11],
+//   [6],
+//   [4],
+//   [10, 7],
+//   [12],
+//   [11, 11, 11, 8],
+//   [],
+//   [],
+//   [7, 3, 4],
+//   [3, 10],
+//   [],
+//   [],
+//   [5]], 2));
+//[0, 1, 2, 3, 4, 5, 9, 12, 9, 8, 5, 3, 0, 1, 2, 3, 5, 6, 9, 10, 11, 8, 7, 3, 2, 3, 4, 5, 10, 11, 8, 4, 3, 5, 7, 11, 5, 8, 11, 0]
+
+console.log(theLift(
+  [[6],
+  [2, 0, 3],
+  [5, 12, 0, 14],
+  [5, 15],
+  [5, 12],
+  [4, 8],
+  [8, 15],
+  [],
+  [],
+  [],
+  [],
+  [5, 12, 7, 10],
+  [14, 5],
+  [15, 7, 6, 1],
+  [0],
+  [0, 7, 4]], 1));
+  // [0, 1, 2, 3, 4, 5, 6, 8, 11, 12, 13, 14, 15, 14, 13, 12, 11, 5, 2, 1, 0, 1, 2, 3, 4, 5, 6, 8, 13, 15, 14, 13, 12, 11, 7, 5, 4, 2, 1, 0, 1, 2, 3, 4, 5, 6, 15, 14, 13, 12, 11, 4, 1, 0, 2, 3, 4, 12, 14, 13, 12, 11, 0, 2, 3, 4, 14, 13, 12, 11, 7, 3, 4, 15, 13, 12, 11, 6, 4, 5, 13, 12, 11, 1, 4, 12, 11, 5, 11, 5, 11, 7, 11, 10, 0]
