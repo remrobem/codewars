@@ -142,9 +142,9 @@ let theLift = function (queues, capacity) {
   let stopsUp = [];
   let stopsDown = [];
   let lift = [];
+
   let upTrips = [];
   let downTrips = [];
-
 
   trips = buildTrips(queues);
   return buildStops(trips);
@@ -158,7 +158,6 @@ let theLift = function (queues, capacity) {
     getDownTrips(queues);
 
     return [...upTrips, ...downTrips];
-
   };
 
   // get all the rider up requests
@@ -173,7 +172,7 @@ let theLift = function (queues, capacity) {
     });
   };
 
-  // get all the elevator doen requests.
+  // get all the elevator down requests.
   // the queue for each floor needs to be reversed to support going thru the array
   function getDownTrips(queues) {
     return queues.map((queue, floor) => {
@@ -193,6 +192,7 @@ let theLift = function (queues, capacity) {
     // initialize the stops
     stops.push(0);
 
+    // lift go up, down,up, down,... untill all riders are off
     while (trips.length) {
 
       // get the stops for an up trip
@@ -218,14 +218,6 @@ let theLift = function (queues, capacity) {
       stopsDown = [...new Set(stopsDown)];
 
 
-      // // if the starting floor for the new up trip is same as the 
-      //       if (stops[stops.length - 1] == stopsUp[0]) {
-      //         stops.splice(stops.length - 1);
-      //       }
-      //       if (stopsUp[stopsUp.length - 1] == stopsDown[0]) {
-      //         stopsUp.splice(stopsUp.length - 1);
-      //       }
-
       // concatenate prior trips with the current up and down trip
       stops = [...stops, ...stopsUp, ...stopsDown];
 
@@ -234,7 +226,8 @@ let theLift = function (queues, capacity) {
 
       trips.reverse();
 
-    };
+    }; // end while
+
     // add a grounf floor stop at the end of the stops in case it does not already exist
     if (stops[stops.length - 1] != 0) {
       stops.push(0);
@@ -250,6 +243,8 @@ let theLift = function (queues, capacity) {
 
   function moveLift(trips, direction) {
 
+    // for each floor, see if any riders need to get off and go thru trips to see if any riders
+    // need to get on
     if (direction == '+') {
       for (let onFloor = 0; onFloor < queues.length; onFloor++) {
         lift = riderGetOff(onFloor);
