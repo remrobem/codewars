@@ -85,7 +85,7 @@ function validateBattlefield(field) {
 
     function validateCorners(field) {
         let cornerValidation =  field.map((row, rowIndex) => {
-            return row.reduce((isValid, column, colIndex) => {
+            return row.reduce((isValid, _, colIndex) => {
                 if (isValid) {
                     if (field[rowIndex][colIndex]) {
                         if (rowIndex > 0 && rowIndex < field.length - 1 && colIndex > 0 && colIndex < row.length - 1) {
